@@ -1,0 +1,28 @@
+#ansible-playbook playbook.yml --ask-become-pass
+---
+- name: Create rke user with passwordless sudo
+  hosts: rancher
+  remote_user: brandon
+  become: yes
+  tasks:
+    - name: Add RKE admin user
+      user:
+        name: brandon
+        shell: /bin/bash
+     
+    - name: Create sudo file
+      file:
+        path: /etc/sudoers.d/brandon
+        state: touch
+    
+    - name: Give rke user passwordless sudo
+      lineinfile:
+        path: /etc/sudoers.d/brandon
+        state: present
+        line: 'rke ALL=(ALL:ALL) NOPASSWD: ALL'
+     
+    - name: Set authorized key taken from file
+      authorized_key:
+        user: brandon
+        state: present
+        key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
